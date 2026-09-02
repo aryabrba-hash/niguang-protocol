@@ -22,4 +22,4 @@
 - 建立语义化版本、变更日志和发布流程
 
 [Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/aryabrba-hash/niguang-protocol/releases/tag/v0.1.0
+[0.1.0]: https://github.com/aryabrba-hash/niguang-protocol/tree/v0.1.0
