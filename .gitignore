@@ -1,0 +1,18 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Environment and logs
+.env
+.env.*
+*.log
