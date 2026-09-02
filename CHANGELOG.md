@@ -6,9 +6,23 @@
 
 ### 计划
 
-- 增加更多训练规则与难度曲线
 - 增加成绩分享与历史趋势
 - 为微信小程序迁移拆分游戏逻辑与界面层
+
+## [0.2.0] - 2026-09-02
+
+### 新增
+
+- 增加 8 个渐进式关卡，难度依次覆盖单一规则、规则冲突、规则切换与干扰抑制
+- 增加关卡目标说明、解锁进度、通关正确率与关卡选择
+- 增加顶部当前规则提示，以及切换成功时的专属反馈
+- 答错时明确提示本题应该关注文字还是箭头
+- 高难度关卡加入更快切换、更短反馈、外围干扰与更高冲突率
+
+### 优化
+
+- 优化移动端关卡界面和结果页信息层级
+- 保留连击、能量、生命值和历史最高分，形成逐关推进的完整循环
 
 ## [0.1.0] - 2026-09-02
 
@@ -21,5 +35,6 @@
 - 建立自动部署配置
 - 建立语义化版本、变更日志和发布流程
 
-[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/aryabrba-hash/niguang-protocol/tree/v0.1.0

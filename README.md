@@ -4,14 +4,25 @@
 
 ## 在线试玩
 
-[立即开始游戏](https://htmlpreview.github.io/?https://github.com/aryabrba-hash/niguang-protocol/blob/main/index.html)
+[立即开始游戏](https://aryabrba-hash.github.io/niguang-protocol/)
 
 ## 当前版本
 
-- 版本：`v0.1.0`
-- 阶段：基础可玩原型
+- 版本：`v0.2.0`
+- 阶段：渐进式关卡原型
 - 入口：`index.html`
 - 技术：原生 HTML、CSS、JavaScript
+
+## 关卡结构
+
+游戏共 8 关，每关只引入一个主要学习目标：
+
+- 第 1–2 关：分别稳定掌握文字规则和箭头规则
+- 第 3–4 关：在文字、箭头冲突时坚持当前规则
+- 第 5–6 关：从每五题切换逐步提高到每三题切换
+- 第 7–8 关：加入旧规则残影、外围干扰和每题切换
+
+答题时顶部始终显示当前规则；切换成功与答错原因都会给出明确反馈。
 
 ## 本地运行
 
