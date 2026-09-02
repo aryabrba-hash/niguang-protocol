@@ -9,6 +9,21 @@
 - 增加成绩分享与历史趋势
 - 为微信小程序迁移拆分游戏逻辑与界面层
 
+## [0.3.0] - 2026-09-02
+
+### 新增
+
+- 增加 3、6、10 连击里程碑，对应 `×2`、`×3`、`×4` 得分倍率
+- 10 连击触发“心流爆发”和短暂超载，倍率最高可达 `×8`
+- 答对时增加 Canvas 粒子爆发、扩散光环、浮动得分和屏幕闪光
+- 连击升级时增加专属横幅、渐进式升调音效和触感反馈
+- 断连时明确显示“原连击 → 0”，并播放独立破裂反馈
+
+### 性能
+
+- 所有即时粒子由单个 Canvas 按需绘制，动画结束后自动停止刷新
+- 音效继续复用单一音频上下文，避免连击阶段产生额外初始化开销
+
 ## [0.2.1] - 2026-09-02
 
 ### 修复
@@ -49,7 +64,8 @@
 - 建立自动部署配置
 - 建立语义化版本、变更日志和发布流程
 
-[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/aryabrba-hash/niguang-protocol/tree/v0.1.0
