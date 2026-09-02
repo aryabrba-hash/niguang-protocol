@@ -9,6 +9,20 @@
 - 增加成绩分享与历史趋势
 - 为微信小程序迁移拆分游戏逻辑与界面层
 
+## [0.2.1] - 2026-09-02
+
+### 修复
+
+- 答题后立即压暗旧题并禁用输入，避免快速连按被误认为已经回答下一题
+- 新题完成绘制后才同步开启按钮和倒计时，消除画面与判定不同步的问题
+- 增加“答案已锁定 / 新题加载中 / 可以作答”状态提示
+
+### 性能
+
+- 复用同一个音频引擎，避免每次答题重复创建音频上下文
+- 高难度关卡不再每题重建干扰元素
+- 降低手机端动画负担，并将倒计时刷新频率从每秒 20 次降至 10 次
+
 ## [0.2.0] - 2026-09-02
 
 ### 新增
@@ -35,6 +49,7 @@
 - 建立自动部署配置
 - 建立语义化版本、变更日志和发布流程
 
-[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/aryabrba-hash/niguang-protocol/tree/v0.1.0
