@@ -33,7 +33,7 @@ export function correctDirection(state) {
 }
 
 export function createSession(levelIndex, options = {}) {
-  const level = LEVELS[levelIndex];
+  const level = options.level ?? LEVELS[levelIndex];
   if (!level) throw new RangeError(`Unknown level: ${levelIndex}`);
   const seed = options.seed ?? randomSeed();
   const random = createSeededRandom(seed);
@@ -48,7 +48,8 @@ export function createSession(levelIndex, options = {}) {
     score: 0,
     combo: 0,
     maxCombo: 0,
-    lives: 3,
+    lives: options.lives ?? 3,
+    maxLives: options.lives ?? 3,
     energy: 0,
     rule: ruleForTurn(level, 0),
     prompt: makePrompt(level, random),

@@ -10,6 +10,7 @@ import {
 import { BrowserPlatform } from './platform/browser.js';
 import { EffectsController } from './ui/effects.js';
 import { completeTutorial, recordSession, updateProfileSettings } from './core/profile.js';
+import { adaptiveMode, applyAdaptiveMode, updateAdaptiveProfile } from './core/adaptive.js';
 
 const element = (id) => document.getElementById(id);
 const app = element('app');
@@ -24,6 +25,8 @@ const effects = new EffectsController({
 
 let state;
 let profile = platform.loadProfile();
+let sessionLevel = null;
+let sessionAdaptiveMode = adaptiveMode(profile);
 let selectedLevel = 0;
 let inputLocked = true;
 let questionToken = 0;
@@ -57,7 +60,7 @@ const tutorialSteps = [
 
 const formatNumber = (value) => Math.round(value).toLocaleString('zh-CN');
 const unlockedCount = () => clamp(profile.unlockedLevel, 1, LEVELS.length);
-const currentLevel = () => LEVELS[state?.levelIndex ?? selectedLevel];
+const currentLevel = () => state?.playing && sessionLevel ? sessionLevel : LEVELS[state?.levelIndex ?? selectedLevel];
 
 function setInputReady(ready, label) {
   inputLocked = !ready;
@@ -83,7 +86,7 @@ function showBanner(text, kind = '') {
 }
 
 function renderHearts() {
-  element('hearts').innerHTML = [0, 1, 2]
+  element('hearts').innerHTML = Array.from({ length: state.maxLives || 3 }, (_, index) => index)
     .map((index) => `<span class="heart ${index < state.lives ? 'alive' : ''}">♥</span>`)
     .join('');
 }
@@ -133,6 +136,8 @@ function render() {
   element('levelLabel').textContent = `关卡 ${String(state.levelIndex + 1).padStart(2, '0')} · ${level.chapter}`;
   element('levelGoal').textContent = level.goal;
   element('questionProgress').textContent = `${String(state.turn + 1).padStart(2, '0')} / ${String(level.questions).padStart(2, '0')}`;
+  element('adaptiveBadge').textContent = sessionAdaptiveMode.label;
+  element('adaptiveBadge').classList.toggle('hidden', sessionAdaptiveMode.id === 'standard' || !state.playing);
   element('arrow').textContent = state.prompt.arrow === 'left' ? '←' : '→';
   element('word').textContent = state.prompt.word === 'left' ? '左' : '右';
   element('signalId').textContent = `SIGNAL / ${String(state.turn + 1).padStart(2, '0')}`;
@@ -196,6 +201,7 @@ function finishLevel() {
   const level = currentLevel();
   const summary = sessionSummary(state, level);
   state.passed = summary.passed;
+  profile = updateAdaptiveProfile(profile, summary, sessionAdaptiveMode);
   profile = recordSession(profile, summary, platform.now());
   platform.saveProfile(profile);
   const best = profile.bestScore;
@@ -208,7 +214,11 @@ function finishLevel() {
   element('levelResult').textContent = summary.passed ? `✓ 第 ${state.levelIndex + 1} 关通过` : `第 ${state.levelIndex + 1} 关未通过`;
   element('rank').textContent = summary.passed ? `已学会：${level.goal}` : `目标正确率 ${Math.round(level.target * 100)}% · 再稳一次`;
   element('again').textContent = summary.passed && state.levelIndex < LEVELS.length - 1 ? '下一关　→' : '↻　再试一次';
-  element('resultTip').textContent = summary.passed ? '新规则已写入你的关卡记录' : '看顶部规则，先正确再追求速度';
+  element('resultTip').textContent = summary.passed
+    ? '新规则已写入你的关卡记录'
+    : profile.adaptive.recentFailures >= 2
+      ? '下一局将开启恢复模式：更多反应时间与一次额外容错'
+      : '看顶部规则，先正确再追求速度';
   element('endOverlay').classList.remove('hidden');
   effects.tone(summary.passed ? 660 : 220, 0.24);
   renderLevelMenu();
@@ -274,7 +284,9 @@ function startLevel(index) {
   effects.clear();
   questionToken += 1;
   selectedLevel = index;
-  state = createSession(index, { now: platform.now() });
+  sessionAdaptiveMode = adaptiveMode(profile);
+  sessionLevel = applyAdaptiveMode(LEVELS[index], sessionAdaptiveMode);
+  state = createSession(index, { level: sessionLevel, now: platform.now(), lives: 3 + sessionAdaptiveMode.extraLives });
   element('startOverlay').classList.add('hidden');
   element('endOverlay').classList.add('hidden');
   element('feedback').textContent = '';
