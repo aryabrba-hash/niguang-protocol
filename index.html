@@ -43,6 +43,17 @@
         <div class="level-map" id="levelMap"></div><button class="primary" id="start">开始第 1 关　→</button><small class="tip">点击左右键，或使用键盘 A / D</small>
       </section>
     </div>
+    <div class="overlay hidden" id="tutorialOverlay">
+      <section class="modal tutorial" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+        <div class="tutorial-progress" aria-label="新手引导进度"><i class="active"></i><i></i><i></i></div>
+        <span class="kicker" id="tutorialKicker">01 / 03 · 锁定规则</span>
+        <h1 id="tutorialTitle">先看顶部<br><em>再看题目</em></h1>
+        <div class="tutorial-demo" id="tutorialDemo" aria-hidden="true"><b>本轮看文字</b><span>←　右</span></div>
+        <p id="tutorialText">每道题先确认顶部规则。它写“看文字”，答案就只由汉字决定。</p>
+        <button class="primary" id="tutorialNext">明白，下一步　→</button>
+        <button class="secondary" id="tutorialSkip">跳过引导</button>
+      </section>
+    </div>
     <div class="overlay hidden" id="endOverlay">
       <section class="modal result" role="dialog" aria-modal="true" aria-labelledby="finalScore">
         <span class="kicker" id="levelResult">ϟ 关卡完成</span><h2 id="finalScore">0</h2><p class="rank" id="rank">规则已稳定</p>
