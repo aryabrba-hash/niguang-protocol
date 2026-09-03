@@ -11,6 +11,7 @@ import { BrowserPlatform } from './platform/browser.js';
 import { EffectsController } from './ui/effects.js';
 import { completeTutorial, recordSession, updateProfileSettings } from './core/profile.js';
 import { adaptiveMode, applyAdaptiveMode, updateAdaptiveProfile } from './core/adaptive.js';
+import { buildDailyLevel, localDateKey, recordDailyCompletion } from './core/daily.js';
 
 const element = (id) => document.getElementById(id);
 const app = element('app');
@@ -60,7 +61,7 @@ const tutorialSteps = [
 
 const formatNumber = (value) => Math.round(value).toLocaleString('zh-CN');
 const unlockedCount = () => clamp(profile.unlockedLevel, 1, LEVELS.length);
-const currentLevel = () => state?.playing && sessionLevel ? sessionLevel : LEVELS[state?.levelIndex ?? selectedLevel];
+const currentLevel = () => sessionLevel ?? LEVELS[state?.levelIndex ?? selectedLevel];
 
 function setInputReady(ready, label) {
   inputLocked = !ready;
@@ -133,11 +134,13 @@ function render() {
   element('ruleId').textContent = level.rules.length > 1 ? '规则切换' : '规则锁定';
   element('ruleTitle').textContent = rule.title;
   element('ruleHint').textContent = rule.hint;
-  element('levelLabel').textContent = `关卡 ${String(state.levelIndex + 1).padStart(2, '0')} · ${level.chapter}`;
+  element('levelLabel').textContent = state.mode === 'daily'
+    ? `今日协议 · ${level.dateKey.slice(5)}`
+    : `关卡 ${String(state.levelIndex + 1).padStart(2, '0')} · ${level.chapter}`;
   element('levelGoal').textContent = level.goal;
   element('questionProgress').textContent = `${String(state.turn + 1).padStart(2, '0')} / ${String(level.questions).padStart(2, '0')}`;
-  element('adaptiveBadge').textContent = sessionAdaptiveMode.label;
-  element('adaptiveBadge').classList.toggle('hidden', sessionAdaptiveMode.id === 'standard' || !state.playing);
+  element('adaptiveBadge').textContent = state.mode === 'daily' ? '同日同题' : sessionAdaptiveMode.label;
+  element('adaptiveBadge').classList.toggle('hidden', state.mode !== 'daily' && (sessionAdaptiveMode.id === 'standard' || !state.playing));
   element('arrow').textContent = state.prompt.arrow === 'left' ? '←' : '→';
   element('word').textContent = state.prompt.word === 'left' ? '左' : '右';
   element('signalId').textContent = `SIGNAL / ${String(state.turn + 1).padStart(2, '0')}`;
@@ -201,7 +204,8 @@ function finishLevel() {
   const level = currentLevel();
   const summary = sessionSummary(state, level);
   state.passed = summary.passed;
-  profile = updateAdaptiveProfile(profile, summary, sessionAdaptiveMode);
+  if (summary.mode === 'level') profile = updateAdaptiveProfile(profile, summary, sessionAdaptiveMode);
+  if (summary.mode === 'daily') profile = recordDailyCompletion(profile, currentLevel().dateKey, summary, platform.now());
   profile = recordSession(profile, summary, platform.now());
   platform.saveProfile(profile);
   const best = profile.bestScore;
@@ -211,11 +215,18 @@ function finishLevel() {
   element('accuracy').textContent = `${summary.accuracy}%`;
   element('maxCombo').textContent = state.maxCombo;
   element('bestEnd').textContent = formatNumber(best);
-  element('levelResult').textContent = summary.passed ? `✓ 第 ${state.levelIndex + 1} 关通过` : `第 ${state.levelIndex + 1} 关未通过`;
-  element('rank').textContent = summary.passed ? `已学会：${level.goal}` : `目标正确率 ${Math.round(level.target * 100)}% · 再稳一次`;
-  element('again').textContent = summary.passed && state.levelIndex < LEVELS.length - 1 ? '下一关　→' : '↻　再试一次';
-  element('resultTip').textContent = summary.passed
-    ? '新规则已写入你的关卡记录'
+  element('levelResult').textContent = summary.mode === 'daily'
+    ? summary.passed ? '✓ 今日协议完成' : '今日协议未完成'
+    : summary.passed ? `✓ 第 ${state.levelIndex + 1} 关通过` : `第 ${state.levelIndex + 1} 关未通过`;
+  element('rank').textContent = summary.mode === 'daily'
+    ? summary.passed ? `连续完成 ${profile.daily.currentStreak} 天` : `目标正确率 ${Math.round(level.target * 100)}% · 再稳一次`
+    : summary.passed ? `已学会：${level.goal}` : `目标正确率 ${Math.round(level.target * 100)}% · 再稳一次`;
+  element('again').textContent = summary.mode === 'daily'
+    ? '↻　再挑战今日协议'
+    : summary.passed && state.levelIndex < LEVELS.length - 1 ? '下一关　→' : '↻　再试一次';
+  element('resultTip').textContent = summary.mode === 'daily' && summary.passed
+    ? '同一天题序固定，下一次可以挑战更快反应'
+    : summary.passed ? '新规则已写入你的关卡记录'
     : profile.adaptive.recentFailures >= 2
       ? '下一局将开启恢复模式：更多反应时间与一次额外容错'
       : '看顶部规则，先正确再追求速度';
@@ -279,14 +290,13 @@ function tick() {
   if (now >= state.deadline) answer(null);
 }
 
-function startLevel(index) {
+function beginSession(index, level, options = {}) {
   stopTimers();
   effects.clear();
   questionToken += 1;
   selectedLevel = index;
-  sessionAdaptiveMode = adaptiveMode(profile);
-  sessionLevel = applyAdaptiveMode(LEVELS[index], sessionAdaptiveMode);
-  state = createSession(index, { level: sessionLevel, now: platform.now(), lives: 3 + sessionAdaptiveMode.extraLives });
+  sessionLevel = level;
+  state = createSession(index, { level, now: platform.now(), ...options });
   element('startOverlay').classList.add('hidden');
   element('endOverlay').classList.add('hidden');
   element('feedback').textContent = '';
@@ -298,6 +308,19 @@ function startLevel(index) {
   armQuestion(currentLevel());
   tickTimer = setInterval(tick, 100);
   effects.tone(440, 0.09);
+}
+
+function startLevel(index) {
+  sessionAdaptiveMode = adaptiveMode(profile);
+  const level = applyAdaptiveMode(LEVELS[index], sessionAdaptiveMode);
+  beginSession(index, level, { lives: 3 + sessionAdaptiveMode.extraLives, mode: 'level' });
+}
+
+function startDaily() {
+  const dateKey = localDateKey();
+  const level = buildDailyLevel(dateKey);
+  sessionAdaptiveMode = { id: 'daily', label: '同日同题', extraLives: 1 };
+  beginSession(5, level, { seed: level.seed, lives: 4, mode: 'daily' });
 }
 
 function selectLevel(index) {
@@ -327,11 +350,20 @@ function showLevelMenu() {
   questionToken += 1;
   stopTimers();
   effects.clear();
+  sessionLevel = null;
   setInputReady(false, '○ 等待开始');
   selectedLevel = Math.min(selectedLevel, unlockedCount() - 1);
   selectLevel(selectedLevel);
   element('endOverlay').classList.add('hidden');
   element('startOverlay').classList.remove('hidden');
+  renderDailyCard();
+}
+
+function renderDailyCard() {
+  const dateKey = localDateKey();
+  const complete = profile.daily.completedDates.includes(dateKey);
+  element('dailyTitle').textContent = complete ? '今日已完成 · 再刷纪录' : '每日同题挑战';
+  element('dailyMeta').textContent = `连续 ${profile.daily.currentStreak} 天 · 15 题 · ${dateKey.slice(5)}`;
 }
 
 function renderTutorial() {
@@ -359,8 +391,12 @@ document.addEventListener('keydown', (event) => {
 });
 
 element('start').addEventListener('click', () => startLevel(selectedLevel));
-element('again').addEventListener('click', () => startLevel(state.passed && state.levelIndex < LEVELS.length - 1 ? state.levelIndex + 1 : state.levelIndex));
+element('again').addEventListener('click', () => {
+  if (state.mode === 'daily') startDaily();
+  else startLevel(state.passed && state.levelIndex < LEVELS.length - 1 ? state.levelIndex + 1 : state.levelIndex);
+});
 element('levelSelect').addEventListener('click', showLevelMenu);
+element('dailyStart').addEventListener('click', startDaily);
 element('sound').addEventListener('click', () => {
   profile = updateProfileSettings(profile, { sound: !platform.settings.sound }, platform.now());
   platform.setSettings(profile.settings);
@@ -383,6 +419,7 @@ state = createSession(selectedLevel, { now: platform.now() });
 state.playing = false;
 element('bestTop').textContent = formatNumber(profile.bestScore);
 selectLevel(selectedLevel);
+renderDailyCard();
 renderDistractors();
 render();
 setInputReady(false, '○ 等待开始');
