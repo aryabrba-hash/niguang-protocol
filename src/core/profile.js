@@ -115,7 +115,7 @@ export function recordSession(profile, summary, now = Date.now()) {
     ...profile,
     updatedAt: now,
     bestScore: Math.max(profile.bestScore, summary.score),
-    unlockedLevel: summary.passed
+    unlockedLevel: summary.mode === 'level' && summary.passed
       ? clamp(Math.max(profile.unlockedLevel, summary.levelIndex + 2), 1, LEVELS.length)
       : profile.unlockedLevel,
     sessionHistory: history,
