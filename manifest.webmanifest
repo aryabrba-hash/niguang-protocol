@@ -1,0 +1,20 @@
+{
+  "name": "逆光协议｜前额叶反应训练",
+  "short_name": "逆光协议",
+  "description": "渐进式规则切换与干扰抑制训练小游戏",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070b0f",
+  "theme_color": "#070b0f",
+  "icons": [
+    {
+      "src": "./assets/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

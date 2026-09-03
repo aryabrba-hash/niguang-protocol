@@ -18,6 +18,7 @@ const element = (id) => document.getElementById(id);
 const app = element('app');
 const controls = [...document.querySelectorAll('[data-dir]')];
 const platform = new BrowserPlatform();
+void platform.registerOffline();
 const performanceTier = platform.performanceTier();
 const effects = new EffectsController({
   app,

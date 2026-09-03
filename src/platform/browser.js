@@ -101,8 +101,23 @@ export class BrowserPlatform {
 
   onVisibilityChange(handler) {
     const listener = () => handler(document.visibilityState === 'visible');
+    const pageHide = () => handler(false);
     document.addEventListener('visibilitychange', listener);
-    window.addEventListener('pagehide', () => handler(false));
-    return () => document.removeEventListener('visibilitychange', listener);
+    window.addEventListener('pagehide', pageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', listener);
+      window.removeEventListener('pagehide', pageHide);
+    };
+  }
+
+  async registerOffline() {
+    if (!('serviceWorker' in navigator)) return false;
+    if (!window.isSecureContext && location.hostname !== 'localhost') return false;
+    try {
+      await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
