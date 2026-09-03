@@ -12,6 +12,7 @@ import { EffectsController } from './ui/effects.js';
 import { completeTutorial, recordSession, updateProfileSettings } from './core/profile.js';
 import { adaptiveMode, applyAdaptiveMode, updateAdaptiveProfile } from './core/adaptive.js';
 import { buildDailyLevel, localDateKey, recordDailyCompletion } from './core/daily.js';
+import { createSharePayload, summarizeHistory } from './core/analytics.js';
 
 const element = (id) => document.getElementById(id);
 const app = element('app');
@@ -37,6 +38,7 @@ let switchTimer = 0;
 let readyTimer = 0;
 let bannerTimer = 0;
 let tutorialStep = 0;
+let lastSummary = null;
 
 const tutorialSteps = [
   {
@@ -120,6 +122,7 @@ function render() {
   app.classList.toggle('noise-2', level.noise === 2);
   app.classList.toggle('combo-hot', state.combo >= 6);
   app.classList.toggle('combo-flow', state.combo >= 10);
+  element('stats').disabled = state.playing;
 
   element('score').textContent = formatNumber(state.score);
   element('combo').textContent = state.combo;
@@ -195,6 +198,7 @@ function stopTimers() {
 function finishLevel() {
   if (!state.playing) return;
   state.playing = false;
+  element('stats').disabled = false;
   questionToken += 1;
   stopTimers();
   effects.clear();
@@ -203,6 +207,7 @@ function finishLevel() {
 
   const level = currentLevel();
   const summary = sessionSummary(state, level);
+  lastSummary = summary;
   state.passed = summary.passed;
   if (summary.mode === 'level') profile = updateAdaptiveProfile(profile, summary, sessionAdaptiveMode);
   if (summary.mode === 'daily') profile = recordDailyCompletion(profile, currentLevel().dateKey, summary, platform.now());
@@ -213,6 +218,7 @@ function finishLevel() {
   element('bestTop').textContent = formatNumber(best);
   element('finalScore').textContent = formatNumber(state.score);
   element('accuracy').textContent = `${summary.accuracy}%`;
+  element('averageReaction').textContent = `${summary.averageReactionMs}ms`;
   element('maxCombo').textContent = state.maxCombo;
   element('bestEnd').textContent = formatNumber(best);
   element('levelResult').textContent = summary.mode === 'daily'
@@ -347,6 +353,7 @@ function renderLevelMenu() {
 
 function showLevelMenu() {
   state.playing = false;
+  element('stats').disabled = false;
   questionToken += 1;
   stopTimers();
   effects.clear();
@@ -364,6 +371,24 @@ function renderDailyCard() {
   const complete = profile.daily.completedDates.includes(dateKey);
   element('dailyTitle').textContent = complete ? '今日已完成 · 再刷纪录' : '每日同题挑战';
   element('dailyMeta').textContent = `连续 ${profile.daily.currentStreak} 天 · 15 题 · ${dateKey.slice(5)}`;
+}
+
+function renderStats() {
+  const stats = summarizeHistory(profile.sessionHistory);
+  element('totalSessions').textContent = stats.totalSessions;
+  element('totalQuestions').textContent = stats.totalQuestions;
+  element('bestAccuracy').textContent = `${stats.bestAccuracy}%`;
+  element('trendText').textContent = stats.totalSessions
+    ? `${stats.recentAccuracy}% · ${stats.accuracyTrend > 0 ? `提升 ${stats.accuracyTrend}` : stats.accuracyTrend < 0 ? `波动 ${Math.abs(stats.accuracyTrend)}` : '保持稳定'}`
+    : '等待首次训练';
+  element('trendChart').innerHTML = stats.recent.length
+    ? stats.recent.map((session) => `<i style="height:${Math.max(3, session.accuracy)}%" data-value="${session.accuracy}%"></i>`).join('')
+    : '<span class="trend-empty">完成一局后，这里会出现趋势</span>';
+}
+
+function openStats() {
+  renderStats();
+  element('statsOverlay').classList.remove('hidden');
 }
 
 function renderTutorial() {
@@ -397,6 +422,21 @@ element('again').addEventListener('click', () => {
 });
 element('levelSelect').addEventListener('click', showLevelMenu);
 element('dailyStart').addEventListener('click', startDaily);
+element('stats').addEventListener('click', openStats);
+element('homeStats').addEventListener('click', openStats);
+element('resultStats').addEventListener('click', openStats);
+element('statsClose').addEventListener('click', () => element('statsOverlay').classList.add('hidden'));
+element('shareResult').addEventListener('click', async () => {
+  if (!lastSummary) return;
+  const button = element('shareResult');
+  try {
+    const result = await platform.share(createSharePayload(lastSummary, profile.daily.currentStreak));
+    button.textContent = result === 'copied' ? '成绩文案已复制' : result === 'shared' ? '分享完成' : '当前浏览器暂不支持分享';
+  } catch {
+    button.textContent = '已取消分享';
+  }
+  setTimeout(() => { button.textContent = '分享这次成绩'; }, 1800);
+});
 element('sound').addEventListener('click', () => {
   profile = updateProfileSettings(profile, { sound: !platform.settings.sound }, platform.now());
   platform.setSettings(profile.settings);
