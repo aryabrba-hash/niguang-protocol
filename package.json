@@ -1,0 +1,14 @@
+{
+  "name": "niguang-protocol",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "validate": "node scripts/validate-build.mjs",
+    "check": "npm test && npm run validate"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
