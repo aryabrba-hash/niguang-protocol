@@ -77,7 +77,9 @@ export function migrateProfile(raw, legacy = {}, now = Date.now()) {
       1,
       LEVELS.length,
     ),
-    tutorialCompleted: Boolean(source.tutorialCompleted),
+    tutorialCompleted: source.tutorialCompleted === undefined
+      ? finiteNumber(legacy.bestScore) > 0 || finiteNumber(legacy.unlockedLevel, 1) > 1
+      : Boolean(source.tutorialCompleted),
     settings: {
       sound: settings.sound !== false,
       haptics: settings.haptics !== false,
@@ -126,4 +128,12 @@ export function updateProfileSettings(profile, changes, now = Date.now()) {
     updatedAt: now,
     settings: { ...profile.settings, ...changes },
   }, {}, now);
+}
+
+export function completeTutorial(profile, now = Date.now()) {
+  return {
+    ...profile,
+    tutorialCompleted: true,
+    updatedAt: now,
+  };
 }

@@ -9,7 +9,7 @@ import {
 } from './core/engine.js';
 import { BrowserPlatform } from './platform/browser.js';
 import { EffectsController } from './ui/effects.js';
-import { recordSession, updateProfileSettings } from './core/profile.js';
+import { completeTutorial, recordSession, updateProfileSettings } from './core/profile.js';
 
 const element = (id) => document.getElementById(id);
 const app = element('app');
@@ -32,6 +32,28 @@ let nextTimer = 0;
 let switchTimer = 0;
 let readyTimer = 0;
 let bannerTimer = 0;
+let tutorialStep = 0;
+
+const tutorialSteps = [
+  {
+    kicker: '01 / 03 · 锁定规则',
+    title: '先看顶部<br><em>再看题目</em>',
+    demo: '<b>本轮看文字</b><span>←　右</span>',
+    text: '每道题先确认顶部规则。它写“看文字”，答案就只由汉字决定。',
+  },
+  {
+    kicker: '02 / 03 · 抑制干扰',
+    title: '信息会冲突<br><em>规则不会</em>',
+    demo: '<b>本轮看箭头</b><span>→　左</span>',
+    text: '文字与箭头可能故意打架。不要凭第一眼作答，只服从当前规则。',
+  },
+  {
+    kicker: '03 / 03 · 建立节奏',
+    title: '先求正确<br><em>再追连击</em>',
+    demo: '<b>3 连击 · 得分 ×2</b><span>✓　✓　✓</span>',
+    text: '稳定答对会提高倍率；答错会归零。训练目标是控制反应，不是盲目抢快。',
+  },
+];
 
 const formatNumber = (value) => Math.round(value).toLocaleString('zh-CN');
 const unlockedCount = () => clamp(profile.unlockedLevel, 1, LEVELS.length);
@@ -300,6 +322,23 @@ function showLevelMenu() {
   element('startOverlay').classList.remove('hidden');
 }
 
+function renderTutorial() {
+  const step = tutorialSteps[tutorialStep];
+  element('tutorialKicker').textContent = step.kicker;
+  element('tutorialTitle').innerHTML = step.title;
+  element('tutorialDemo').innerHTML = step.demo;
+  element('tutorialText').textContent = step.text;
+  element('tutorialNext').textContent = tutorialStep === tutorialSteps.length - 1 ? '开始训练　→' : '明白，下一步　→';
+  document.querySelectorAll('.tutorial-progress i').forEach((bar, index) => bar.classList.toggle('active', index <= tutorialStep));
+}
+
+function finishTutorial() {
+  profile = completeTutorial(profile, platform.now());
+  platform.saveProfile(profile);
+  element('tutorialOverlay').classList.add('hidden');
+  element('start').focus();
+}
+
 controls.forEach((button) => button.addEventListener('pointerdown', () => answer(button.dataset.dir)));
 document.addEventListener('keydown', (event) => {
   if (event.repeat) return;
@@ -317,6 +356,15 @@ element('sound').addEventListener('click', () => {
   element('sound').textContent = platform.settings.sound ? '◕' : '○';
   element('sound').ariaLabel = platform.settings.sound ? '关闭音效' : '开启音效';
 });
+element('tutorialNext').addEventListener('click', () => {
+  if (tutorialStep < tutorialSteps.length - 1) {
+    tutorialStep += 1;
+    renderTutorial();
+  } else {
+    finishTutorial();
+  }
+});
+element('tutorialSkip').addEventListener('click', finishTutorial);
 
 selectedLevel = unlockedCount() - 1;
 state = createSession(selectedLevel, { now: platform.now() });
@@ -326,3 +374,7 @@ selectLevel(selectedLevel);
 renderDistractors();
 render();
 setInputReady(false, '○ 等待开始');
+if (!profile.tutorialCompleted) {
+  renderTutorial();
+  element('tutorialOverlay').classList.remove('hidden');
+}
