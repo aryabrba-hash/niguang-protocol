@@ -85,6 +85,14 @@
         <button class="primary" id="settingsClose">保存并返回</button>
       </section>
     </div>
+    <div class="overlay hidden" id="pauseOverlay">
+      <section class="modal pause-modal" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+        <span class="kicker">训练已安全暂停</span><h1 id="pauseTitle">信号冻结<br><em>不会扣血</em></h1>
+        <p>你切换了窗口或设备暂时进入后台。回到游戏后由你决定何时继续，倒计时不会偷跑。</p>
+        <button class="primary" id="resumeGame">继续当前训练　→</button>
+        <button class="secondary" id="pauseExit">退出到关卡选择</button>
+      </section>
+    </div>
   </main>
   <script type="module" src="./src/app.js"></script>
 </body>

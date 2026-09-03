@@ -92,4 +92,17 @@ export class BrowserPlatform {
       nativeShare: Boolean(navigator.share),
     };
   }
+
+  performanceTier() {
+    const cores = navigator.hardwareConcurrency || 4;
+    const memory = navigator.deviceMemory || 4;
+    return cores <= 4 || memory <= 4 ? 'low' : 'standard';
+  }
+
+  onVisibilityChange(handler) {
+    const listener = () => handler(document.visibilityState === 'visible');
+    document.addEventListener('visibilitychange', listener);
+    window.addEventListener('pagehide', () => handler(false));
+    return () => document.removeEventListener('visibilitychange', listener);
+  }
 }
