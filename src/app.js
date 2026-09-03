@@ -123,6 +123,7 @@ function render() {
   app.classList.toggle('combo-hot', state.combo >= 6);
   app.classList.toggle('combo-flow', state.combo >= 10);
   element('stats').disabled = state.playing;
+  element('settings').disabled = state.playing;
 
   element('score').textContent = formatNumber(state.score);
   element('combo').textContent = state.combo;
@@ -199,6 +200,7 @@ function finishLevel() {
   if (!state.playing) return;
   state.playing = false;
   element('stats').disabled = false;
+  element('settings').disabled = false;
   questionToken += 1;
   stopTimers();
   effects.clear();
@@ -354,6 +356,7 @@ function renderLevelMenu() {
 function showLevelMenu() {
   state.playing = false;
   element('stats').disabled = false;
+  element('settings').disabled = false;
   questionToken += 1;
   stopTimers();
   effects.clear();
@@ -391,6 +394,38 @@ function openStats() {
   element('statsOverlay').classList.remove('hidden');
 }
 
+function applySettings() {
+  platform.setSettings(profile.settings);
+  app.classList.toggle('reduced-motion', profile.settings.reducedMotion);
+  app.classList.toggle('high-contrast', profile.settings.highContrast);
+  element('sound').textContent = profile.settings.sound ? '◕' : '○';
+  element('sound').ariaLabel = profile.settings.sound ? '关闭音效' : '开启音效';
+  element('sound').setAttribute('aria-pressed', String(profile.settings.sound));
+  element('settingSound').checked = profile.settings.sound;
+  element('settingHaptics').checked = profile.settings.haptics;
+  element('settingMotion').checked = profile.settings.reducedMotion;
+  element('settingContrast').checked = profile.settings.highContrast;
+  const capabilities = platform.capabilities();
+  element('settingHaptics').disabled = !capabilities.haptics;
+  element('hapticsHint').textContent = capabilities.haptics ? '答对、断连与里程碑震动' : '当前设备或浏览器不支持震动';
+}
+
+function openSettings() {
+  applySettings();
+  element('settingsOverlay').classList.remove('hidden');
+}
+
+function saveSettings() {
+  profile = updateProfileSettings(profile, {
+    sound: element('settingSound').checked,
+    haptics: element('settingHaptics').checked,
+    reducedMotion: element('settingMotion').checked,
+    highContrast: element('settingContrast').checked,
+  }, platform.now());
+  platform.saveProfile(profile);
+  applySettings();
+}
+
 function renderTutorial() {
   const step = tutorialSteps[tutorialStep];
   element('tutorialKicker').textContent = step.kicker;
@@ -426,6 +461,12 @@ element('stats').addEventListener('click', openStats);
 element('homeStats').addEventListener('click', openStats);
 element('resultStats').addEventListener('click', openStats);
 element('statsClose').addEventListener('click', () => element('statsOverlay').classList.add('hidden'));
+element('settings').addEventListener('click', openSettings);
+element('homeSettings').addEventListener('click', openSettings);
+element('settingsClose').addEventListener('click', () => {
+  saveSettings();
+  element('settingsOverlay').classList.add('hidden');
+});
 element('shareResult').addEventListener('click', async () => {
   if (!lastSummary) return;
   const button = element('shareResult');
@@ -443,6 +484,7 @@ element('sound').addEventListener('click', () => {
   platform.saveProfile(profile);
   element('sound').textContent = platform.settings.sound ? '◕' : '○';
   element('sound').ariaLabel = platform.settings.sound ? '关闭音效' : '开启音效';
+  element('sound').setAttribute('aria-pressed', String(platform.settings.sound));
 });
 element('tutorialNext').addEventListener('click', () => {
   if (tutorialStep < tutorialSteps.length - 1) {
@@ -457,6 +499,7 @@ element('tutorialSkip').addEventListener('click', finishTutorial);
 selectedLevel = unlockedCount() - 1;
 state = createSession(selectedLevel, { now: platform.now() });
 state.playing = false;
+applySettings();
 element('bestTop').textContent = formatNumber(profile.bestScore);
 selectLevel(selectedLevel);
 renderDailyCard();

@@ -41,6 +41,9 @@ export class BrowserPlatform {
       bestScore: this.loadLegacyNumber('niguang-best', 0),
       unlockedLevel: this.loadLegacyNumber('niguang-unlocked', 1),
     }, this.now());
+    if (!raw && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      profile.settings.reducedMotion = true;
+    }
     this.setSettings(profile.settings);
     this.saveProfile(profile);
     return profile;
@@ -81,5 +84,12 @@ export class BrowserPlatform {
       return 'copied';
     }
     return 'unsupported';
+  }
+
+  capabilities() {
+    return {
+      haptics: Boolean(navigator.vibrate),
+      nativeShare: Boolean(navigator.share),
+    };
   }
 }
