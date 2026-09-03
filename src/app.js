@@ -9,6 +9,7 @@ import {
 } from './core/engine.js';
 import { BrowserPlatform } from './platform/browser.js';
 import { EffectsController } from './ui/effects.js';
+import { recordSession, updateProfileSettings } from './core/profile.js';
 
 const element = (id) => document.getElementById(id);
 const app = element('app');
@@ -22,6 +23,7 @@ const effects = new EffectsController({
 });
 
 let state;
+let profile = platform.loadProfile();
 let selectedLevel = 0;
 let inputLocked = true;
 let questionToken = 0;
@@ -32,7 +34,7 @@ let readyTimer = 0;
 let bannerTimer = 0;
 
 const formatNumber = (value) => Math.round(value).toLocaleString('zh-CN');
-const unlockedCount = () => clamp(platform.loadLegacyNumber('niguang-unlocked', 1), 1, LEVELS.length);
+const unlockedCount = () => clamp(profile.unlockedLevel, 1, LEVELS.length);
 const currentLevel = () => LEVELS[state?.levelIndex ?? selectedLevel];
 
 function setInputReady(ready, label) {
@@ -172,12 +174,9 @@ function finishLevel() {
   const level = currentLevel();
   const summary = sessionSummary(state, level);
   state.passed = summary.passed;
-  const previousBest = platform.loadLegacyNumber('niguang-best', 0);
-  const best = Math.max(previousBest, state.score);
-  platform.saveLegacyNumber('niguang-best', best);
-  if (summary.passed && state.levelIndex < LEVELS.length - 1) {
-    platform.saveLegacyNumber('niguang-unlocked', Math.max(unlockedCount(), state.levelIndex + 2));
-  }
+  profile = recordSession(profile, summary, platform.now());
+  platform.saveProfile(profile);
+  const best = profile.bestScore;
 
   element('bestTop').textContent = formatNumber(best);
   element('finalScore').textContent = formatNumber(state.score);
@@ -312,7 +311,9 @@ element('start').addEventListener('click', () => startLevel(selectedLevel));
 element('again').addEventListener('click', () => startLevel(state.passed && state.levelIndex < LEVELS.length - 1 ? state.levelIndex + 1 : state.levelIndex));
 element('levelSelect').addEventListener('click', showLevelMenu);
 element('sound').addEventListener('click', () => {
-  platform.setSettings({ sound: !platform.settings.sound });
+  profile = updateProfileSettings(profile, { sound: !platform.settings.sound }, platform.now());
+  platform.setSettings(profile.settings);
+  platform.saveProfile(profile);
   element('sound').textContent = platform.settings.sound ? '◕' : '○';
   element('sound').ariaLabel = platform.settings.sound ? '关闭音效' : '开启音效';
 });
@@ -320,7 +321,7 @@ element('sound').addEventListener('click', () => {
 selectedLevel = unlockedCount() - 1;
 state = createSession(selectedLevel, { now: platform.now() });
 state.playing = false;
-element('bestTop').textContent = formatNumber(platform.loadLegacyNumber('niguang-best', 0));
+element('bestTop').textContent = formatNumber(profile.bestScore);
 selectLevel(selectedLevel);
 renderDistractors();
 render();
