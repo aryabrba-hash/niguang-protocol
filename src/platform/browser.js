@@ -1,3 +1,9 @@
+import {
+  PROFILE_STORAGE_KEY,
+  defaultProfile,
+  migrateProfile,
+} from '../core/profile.js';
+
 export class BrowserPlatform {
   constructor() {
     this.settings = { sound: true, haptics: true, reducedMotion: false };
@@ -22,6 +28,38 @@ export class BrowserPlatform {
     } catch {
       // Private browsing or a full quota should not block a game session.
     }
+  }
+
+  loadProfile() {
+    let raw = null;
+    try {
+      raw = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+    } catch {
+      raw = null;
+    }
+    const profile = migrateProfile(raw, {
+      bestScore: this.loadLegacyNumber('niguang-best', 0),
+      unlockedLevel: this.loadLegacyNumber('niguang-unlocked', 1),
+    }, this.now());
+    this.setSettings(profile.settings);
+    this.saveProfile(profile);
+    return profile;
+  }
+
+  saveProfile(profile) {
+    try {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  resetProfile() {
+    const profile = defaultProfile(this.now());
+    this.saveProfile(profile);
+    this.setSettings(profile.settings);
+    return profile;
   }
 
   vibrate(pattern) {
