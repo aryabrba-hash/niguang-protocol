@@ -13,7 +13,7 @@
     <div class="grid"></div><div class="scan"></div>
     <header>
       <div class="brand"><span class="logo">⌁</span><div><strong>逆光协议</strong><small>NEURAL ARCADE</small></div></div>
-      <div class="actions"><div class="best"><small>最高</small><span id="bestTop">0</span></div><button class="icon-button" id="sound" aria-label="关闭音效">◕</button></div>
+      <div class="actions"><div class="best"><small>最高</small><span id="bestTop">0</span></div><button class="icon-button" id="stats" aria-label="查看训练趋势">⌁</button><button class="icon-button" id="sound" aria-label="关闭音效">◕</button></div>
     </header>
     <section class="stage" aria-label="游戏区">
       <div class="levelbar"><span id="levelLabel">关卡 01 · 单一规则</span><strong id="levelGoal">文字决定答案</strong><em class="adaptive-badge hidden" id="adaptiveBadge">恢复模式</em><b id="questionProgress">01 / 08</b></div>
@@ -41,7 +41,7 @@
         <span class="kicker" id="menuKicker">✦ 渐进训练 · 关卡 01</span><h1 id="homeTitle">先学会规则<br><em>再对抗本能</em></h1><p>每关只增加一个难点。先把正确率做稳，再进入冲突、切换与干扰抑制。</p>
         <button class="daily-card" id="dailyStart"><span>今日协议</span><strong id="dailyTitle">每日同题挑战</strong><small id="dailyMeta">连续 0 天 · 15 题</small></button>
         <div class="lesson"><small>这关我要学会什么规则？</small><strong id="lessonGoal">文字决定答案</strong><p id="lessonDetail">只看汉字，先建立稳定反应。</p></div>
-        <div class="level-map" id="levelMap"></div><button class="primary" id="start">开始第 1 关　→</button><small class="tip">点击左右键，或使用键盘 A / D</small>
+        <div class="level-map" id="levelMap"></div><button class="primary" id="start">开始第 1 关　→</button><button class="secondary" id="homeStats">查看训练趋势</button><small class="tip">点击左右键，或使用键盘 A / D</small>
       </section>
     </div>
     <div class="overlay hidden" id="tutorialOverlay">
@@ -58,8 +58,18 @@
     <div class="overlay hidden" id="endOverlay">
       <section class="modal result" role="dialog" aria-modal="true" aria-labelledby="finalScore">
         <span class="kicker" id="levelResult">ϟ 关卡完成</span><h2 id="finalScore">0</h2><p class="rank" id="rank">规则已稳定</p>
-        <div class="result-grid"><div><span>正确率</span><strong id="accuracy">0%</strong></div><div><span>最高连击</span><strong id="maxCombo">0</strong></div><div><span>历史最高</span><strong id="bestEnd">0</strong></div></div>
-        <button class="primary" id="again">下一关　→</button><button class="secondary" id="levelSelect">选择关卡</button><small class="tip" id="resultTip">达到目标正确率即可解锁下一关</small>
+        <div class="result-grid"><div><span>正确率</span><strong id="accuracy">0%</strong></div><div><span>平均反应</span><strong id="averageReaction">0ms</strong></div><div><span>最高连击</span><strong id="maxCombo">0</strong></div><div><span>历史最高</span><strong id="bestEnd">0</strong></div></div>
+        <button class="primary" id="again">下一关　→</button><button class="secondary" id="shareResult">分享这次成绩</button><button class="secondary" id="resultStats">查看训练趋势</button><button class="secondary" id="levelSelect">选择关卡</button><small class="tip" id="resultTip">达到目标正确率即可解锁下一关</small>
+      </section>
+    </div>
+    <div class="overlay hidden" id="statsOverlay">
+      <section class="modal stats-modal" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+        <span class="kicker">本机训练档案</span><h1 id="statsTitle">看见进步<br><em>不制造压力</em></h1>
+        <div class="stats-summary"><div><span>训练次数</span><strong id="totalSessions">0</strong></div><div><span>累计题目</span><strong id="totalQuestions">0</strong></div><div><span>最佳正确率</span><strong id="bestAccuracy">0%</strong></div></div>
+        <div class="trend-head"><strong>近 7 次正确率</strong><span id="trendText">等待首次训练</span></div>
+        <div class="trend-chart" id="trendChart" aria-label="近七次正确率趋势"></div>
+        <p class="privacy-note">数据仅保存在当前设备。迁移到微信后可选择是否开启云存档。</p>
+        <button class="primary" id="statsClose">返回训练</button>
       </section>
     </div>
   </main>

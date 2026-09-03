@@ -69,4 +69,17 @@ export class BrowserPlatform {
   setSettings(settings) {
     this.settings = { ...this.settings, ...settings };
   }
+
+  async share(payload) {
+    const data = { ...payload, url: window.location.href.split('?')[0] };
+    if (navigator.share) {
+      await navigator.share(data);
+      return 'shared';
+    }
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(`${data.text}\n${data.url}`);
+      return 'copied';
+    }
+    return 'unsupported';
+  }
 }
