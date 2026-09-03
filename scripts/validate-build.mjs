@@ -7,15 +7,22 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const index = await readFile(join(root, 'index.html'), 'utf8');
 const version = (await readFile(join(root, 'VERSION'), 'utf8')).trim();
 const config = await readFile(join(root, 'src/core/config.js'), 'utf8');
+const manifest = JSON.parse(await readFile(join(root, 'manifest.webmanifest'), 'utf8'));
+const serviceWorker = await readFile(join(root, 'sw.js'), 'utf8');
 
 assert.match(index, /<meta name="viewport"/i, '缺少移动端 viewport');
 assert.match(index, /<html lang="zh-CN"/i, '页面语言应为 zh-CN');
 assert.ok(config.includes(`APP_VERSION = '${version}'`), 'VERSION 与应用版本不一致');
+assert.ok(serviceWorker.includes(`niguang-protocol-v${version}`), '离线缓存版本未更新');
 assert.doesNotMatch(index, /(?:src|href)="https?:\/\//i, '首屏不能依赖外部资源');
 
 for (const match of index.matchAll(/(?:src|href)="(\.\/[^"?#]+)[^\"]*"/g)) {
   const target = resolve(root, match[1]);
   await stat(target);
+}
+
+for (const icon of manifest.icons || []) {
+  await stat(resolve(root, icon.src));
 }
 
 async function collectFiles(directory) {

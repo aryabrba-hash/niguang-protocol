@@ -4,10 +4,26 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-03
+
+### 新增
+
+- 将游戏拆分为纯函数核心、浏览器平台层和界面反馈层，为微信小游戏迁移建立边界
+- 增加版本化玩家档案与旧存档迁移，训练历史限制为最近 60 局
+- 增加三步新手引导、透明自适应难度和同日同题的“每日协议”
+- 增加本机训练趋势、成绩分享、声音/触感/减少动态/高对比度设置
+- 增加离线缓存、可安装 Web 应用信息和微信运行时适配层
+- 增加产品指标定义与微信小游戏迁移、提审、商业化蓝图
+
+### 性能与可靠性
+
+- 切后台、锁屏或切换窗口时安全暂停，恢复后沿用剩余答题时间且不误扣血
+- 按设备性能自动降低粒子数量和持续动画，保持核心判定一致
+- 增加 12 项自动化回归测试、512KB 核心包预算和 GitHub Actions 质量门槛
+
 ### 计划
 
-- 增加成绩分享与历史趋势
-- 为微信小程序迁移拆分游戏逻辑与界面层
+- 用微信开发者工具完成 Canvas 场景壳和首批真机性能基线
 
 ## [0.3.0] - 2026-09-02
 
@@ -64,7 +80,8 @@
 - 建立自动部署配置
 - 建立语义化版本、变更日志和发布流程
 
-[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.1.0...v0.2.0
