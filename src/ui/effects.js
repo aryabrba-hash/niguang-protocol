@@ -1,12 +1,13 @@
 import { comboInfo } from '../core/engine.js';
 
 export class EffectsController {
-  constructor({ app, canvas, soundEnabled = () => true, motionEnabled = () => true }) {
+  constructor({ app, canvas, soundEnabled = () => true, motionEnabled = () => true, quality = () => 'standard' }) {
     this.app = app;
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.soundEnabled = soundEnabled;
     this.motionEnabled = motionEnabled;
+    this.quality = quality;
     this.audioContext = null;
     this.particles = [];
     this.rings = [];
@@ -88,7 +89,8 @@ export class EffectsController {
     const tier = comboInfo(combo);
     const accent = getComputedStyle(this.app).getPropertyValue('--accent').trim() || '#98ff6d';
     const color = correct ? accent : '#ff5477';
-    const count = correct ? 12 + tier.level * 5 : 18;
+    const fullCount = correct ? 12 + tier.level * 5 : 18;
+    const count = this.quality() === 'low' ? Math.ceil(fullCount * 0.55) : fullCount;
     const x = this.width / 2;
     const y = this.height * 0.54;
     for (let index = 0; index < count; index += 1) {

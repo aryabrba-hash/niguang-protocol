@@ -18,11 +18,13 @@ const element = (id) => document.getElementById(id);
 const app = element('app');
 const controls = [...document.querySelectorAll('[data-dir]')];
 const platform = new BrowserPlatform();
+const performanceTier = platform.performanceTier();
 const effects = new EffectsController({
   app,
   canvas: element('fxCanvas'),
   soundEnabled: () => platform.settings.sound,
   motionEnabled: () => !platform.settings.reducedMotion,
+  quality: () => performanceTier,
 });
 
 let state;
@@ -39,6 +41,9 @@ let readyTimer = 0;
 let bannerTimer = 0;
 let tutorialStep = 0;
 let lastSummary = null;
+let phase = 'idle';
+let pausedFromPhase = 'idle';
+let pausedRemaining = 0;
 
 const tutorialSteps = [
   {
@@ -161,6 +166,7 @@ function armQuestion(level) {
     const now = platform.now();
     state.deadline = now + level.deadline;
     state.questionStartedAt = now;
+    phase = 'ready';
     setInputReady(true);
     element('rail').style.transform = 'scaleX(1)';
     app.classList.add('question-ready');
@@ -174,6 +180,7 @@ function setQuestion(first = false) {
   const level = currentLevel();
   questionToken += 1;
   if (!first) state = advanceQuestion(state, level, platform.now());
+  phase = 'arming';
   app.classList.remove('hit', 'miss', 'switching', 'question-ready');
   if (state.justSwitched) {
     element('feedback').textContent = `规则切换 · ${RULES[state.rule].title}`;
@@ -199,6 +206,7 @@ function stopTimers() {
 function finishLevel() {
   if (!state.playing) return;
   state.playing = false;
+  phase = 'finished';
   element('stats').disabled = false;
   element('settings').disabled = false;
   questionToken += 1;
@@ -246,6 +254,7 @@ function finishLevel() {
 function answer(choice) {
   if (!state.playing || inputLocked || state.paused) return;
   questionToken += 1;
+  phase = 'feedback';
   setInputReady(false, '○ 答案已锁定');
   app.classList.remove('question-ready');
 
@@ -305,6 +314,7 @@ function beginSession(index, level, options = {}) {
   selectedLevel = index;
   sessionLevel = level;
   state = createSession(index, { level, now: platform.now(), ...options });
+  phase = 'arming';
   element('startOverlay').classList.add('hidden');
   element('endOverlay').classList.add('hidden');
   element('feedback').textContent = '';
@@ -355,6 +365,7 @@ function renderLevelMenu() {
 
 function showLevelMenu() {
   state.playing = false;
+  phase = 'idle';
   element('stats').disabled = false;
   element('settings').disabled = false;
   questionToken += 1;
@@ -426,6 +437,46 @@ function saveSettings() {
   applySettings();
 }
 
+function pauseGame() {
+  if (!state.playing || state.paused) return;
+  pausedFromPhase = phase;
+  pausedRemaining = Math.max(0, state.deadline - platform.now());
+  state.paused = true;
+  phase = 'paused';
+  questionToken += 1;
+  stopTimers();
+  effects.clear();
+  setInputReady(false, 'Ⅱ 训练已暂停');
+  element('pauseOverlay').classList.remove('hidden');
+  platform.saveProfile(profile);
+}
+
+function resumeGame() {
+  if (!state.playing || !state.paused) return;
+  const level = currentLevel();
+  state.paused = false;
+  element('pauseOverlay').classList.add('hidden');
+  if (pausedFromPhase === 'ready') {
+    const elapsed = Math.max(0, level.deadline - pausedRemaining);
+    state.deadline = platform.now() + pausedRemaining;
+    state.questionStartedAt = platform.now() - elapsed;
+    phase = 'ready';
+    setInputReady(true);
+  } else if (pausedFromPhase === 'feedback') {
+    const complete = state.lives <= 0 || state.answered >= level.questions;
+    if (complete) {
+      finishLevel();
+      return;
+    }
+    setQuestion();
+  } else {
+    phase = 'arming';
+    armQuestion(level);
+  }
+  clearInterval(tickTimer);
+  tickTimer = setInterval(tick, 100);
+}
+
 function renderTutorial() {
   const step = tutorialSteps[tutorialStep];
   element('tutorialKicker').textContent = step.kicker;
@@ -467,6 +518,12 @@ element('settingsClose').addEventListener('click', () => {
   saveSettings();
   element('settingsOverlay').classList.add('hidden');
 });
+element('resumeGame').addEventListener('click', resumeGame);
+element('pauseExit').addEventListener('click', () => {
+  state.paused = false;
+  element('pauseOverlay').classList.add('hidden');
+  showLevelMenu();
+});
 element('shareResult').addEventListener('click', async () => {
   if (!lastSummary) return;
   const button = element('shareResult');
@@ -499,6 +556,7 @@ element('tutorialSkip').addEventListener('click', finishTutorial);
 selectedLevel = unlockedCount() - 1;
 state = createSession(selectedLevel, { now: platform.now() });
 state.playing = false;
+app.classList.toggle('low-power', performanceTier === 'low');
 applySettings();
 element('bestTop').textContent = formatNumber(profile.bestScore);
 selectLevel(selectedLevel);
@@ -510,3 +568,7 @@ if (!profile.tutorialCompleted) {
   renderTutorial();
   element('tutorialOverlay').classList.remove('hidden');
 }
+
+platform.onVisibilityChange((visible) => {
+  if (!visible) pauseGame();
+});
