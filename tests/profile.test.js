@@ -8,6 +8,7 @@ import {
   recordSession,
 } from '../src/core/profile.js';
 import { recordDailyCompletion } from '../src/core/daily.js';
+import { LEVELS } from '../src/core/config.js';
 
 test('损坏或旧版存档会被安全迁移', () => {
   const migrated = migrateProfile({
@@ -18,7 +19,7 @@ test('损坏或旧版存档会被安全迁移', () => {
   }, { bestScore: 88 }, 1234);
 
   assert.equal(migrated.schemaVersion, 2);
-  assert.equal(migrated.unlockedLevel, 8);
+  assert.equal(migrated.unlockedLevel, LEVELS.length);
   assert.equal(migrated.settings.sound, false);
   assert.equal(migrated.settings.haptics, true);
   assert.equal(Number.isFinite(migrated.adaptive.rating), true);

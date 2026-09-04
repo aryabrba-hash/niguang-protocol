@@ -1,4 +1,4 @@
-import { LEVELS, RULES } from './core/config.js';
+import { LEVELS, RULES, livesForLevel } from './core/config.js';
 import {
   advanceQuestion,
   clamp,
@@ -332,14 +332,17 @@ function beginSession(index, level, options = {}) {
 function startLevel(index) {
   sessionAdaptiveMode = adaptiveMode(profile);
   const level = applyAdaptiveMode(LEVELS[index], sessionAdaptiveMode);
-  beginSession(index, level, { lives: 3 + sessionAdaptiveMode.extraLives, mode: 'level' });
+  beginSession(index, level, {
+    lives: livesForLevel(level, sessionAdaptiveMode.extraLives),
+    mode: 'level',
+  });
 }
 
 function startDaily() {
   const dateKey = localDateKey();
   const level = buildDailyLevel(dateKey);
   sessionAdaptiveMode = { id: 'daily', label: '同日同题', extraLives: 1 };
-  beginSession(5, level, { seed: level.seed, lives: 4, mode: 'daily' });
+  beginSession(5, level, { seed: level.seed, lives: livesForLevel(level), mode: 'daily' });
 }
 
 function selectLevel(index) {
@@ -355,7 +358,7 @@ function selectLevel(index) {
 function renderLevelMenu() {
   const open = unlockedCount();
   element('levelMap').innerHTML = LEVELS.map((level, index) => `
-    <button data-level="${index}" class="${index < open ? 'unlocked' : ''} ${index === selectedLevel ? 'selected' : ''}" ${index >= open ? 'disabled' : ''}>
+    <button data-level="${index}" class="${index < open ? 'unlocked' : ''} ${index === selectedLevel ? 'selected' : ''} ${level.checkpoint ? 'checkpoint' : ''}" ${index >= open ? 'disabled' : ''}>
       ${index + 1}<br>${index < open ? level.name : '未解锁'}
     </button>
   `).join('');
