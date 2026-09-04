@@ -1,4 +1,4 @@
-const CACHE_NAME = 'niguang-protocol-v0.4.0';
+const CACHE_NAME = 'niguang-protocol-v0.5.0';
 const CORE_ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest', './assets/app-icon.svg',
   './src/app.js', './src/core/config.js', './src/core/random.js', './src/core/engine.js',

@@ -4,6 +4,24 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-04
+
+### 新增
+
+- 主线由 8 关扩展到 20 关，继续沿用单一规则、规则冲突、规则切换与干扰抑制的渐进结构
+- 在第 12、16、19 关加入巩固关，让玩家在后半程恢复稳定和连击节奏
+- 关卡选择面板改为可滚动的 20 关地图，并标记补给关
+
+### 平衡性
+
+- 后八关反应窗不低于 2.5 秒、冲突率不高于 78%，取消每题切换规则的极端设计
+- 生命数自动根据题数与通关正确率计算，确保达到最低合格成绩的玩家不会提前出局
+- 最终六关通关线保持 70%，通过降低冲突与换挡频率穿插恢复节奏
+
+### 测试
+
+- 增加关卡数量、后期难度上限和生命容错一致性测试，自动化测试增至 15 项
+
 ## [0.4.0] - 2026-09-03
 
 ### 新增
@@ -80,7 +98,8 @@
 - 建立自动部署配置
 - 建立语义化版本、变更日志和发布流程
 
-[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/aryabrba-hash/niguang-protocol/compare/v0.2.0...v0.2.1
